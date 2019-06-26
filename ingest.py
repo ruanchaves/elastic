@@ -1,4 +1,6 @@
 import requests
+import sys
+import json
 
 dataset = 'wikisent2.txt'
 
@@ -13,6 +15,8 @@ requests.put("http://localhost:9200/_cluster/settings",
     cookies={},
 )
 
+# Iremos criar o índice. 
+requests.put("http://localhost:9200/wiki", headers={"Content-Type": "application/json"})
 
 # Iremos enviar o dataset para o Elasticsearch em pacotes de 80MB, com espaço de 0 segundos entre as requisições. 
 
@@ -23,7 +27,6 @@ LATENCY = 0
 # Para a nossa finalidade, não é necessário ingerir 100% do dataset.
 
 dump = ''
-latency = 0
 for idx,doc in enumerate(data):
     meta = { "index" : { "_index": "wiki", "_type": "snippet", "_id": idx }}
     entry = { "text": doc }
@@ -38,7 +41,7 @@ for idx,doc in enumerate(data):
                      )
         del(dump)
         dump = ''
-        sleep(latency)
+        sleep(LATENCY)
 
 
 # Agora iremos medir a taxa de aproveitamento como um fator entre 0 e 1.
