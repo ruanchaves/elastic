@@ -20,7 +20,7 @@ requests.put("http://localhost:9200/_cluster/settings",
 # Iremos criar o índice. 
 requests.put("http://localhost:9200/wiki", headers={"Content-Type": "application/json"})
 
-# Iremos enviar o dataset para o Elasticsearch em pacotes de 80MB, com espaço de 0 segundos entre as requisições. 
+# Iremos enviar o dataset para o Elasticsearch em pacotes de 10MB, com espaço de 0 segundos entre as requisições. 
 
 SIZE = 1e+7
 LATENCY = 0
