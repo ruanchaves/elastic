@@ -1,6 +1,8 @@
 import requests
 import sys
 import json
+from time import sleep
+from loguru import logger
 
 dataset = 'wikisent2.txt'
 
@@ -20,7 +22,7 @@ requests.put("http://localhost:9200/wiki", headers={"Content-Type": "application
 
 # Iremos enviar o dataset para o Elasticsearch em pacotes de 80MB, com espaço de 0 segundos entre as requisições. 
 
-SIZE = 8e+7
+SIZE = 1e+7
 LATENCY = 0
 
 # Os dois parâmetros acima devem ser editados caso não se atinja uma taxa de aproveitamento satisfatório.  
@@ -31,7 +33,7 @@ for idx,doc in enumerate(data):
     meta = { "index" : { "_index": "wiki", "_type": "snippet", "_id": idx }}
     entry = { "text": doc }
     dump += json.dumps(meta) + '\n' + json.dumps(entry) + '\n'
-    if sys.getsizeof(dump) > 8e+7:
+    if sys.getsizeof(dump) > SIZE:
         response = requests.post("http://localhost:9200/_bulk",
                       data=dump,
                       headers={
@@ -40,22 +42,17 @@ for idx,doc in enumerate(data):
                       cookies={},
                      )
         del(dump)
-        dump = ''
-        sleep(LATENCY)
-
-
-# Agora iremos medir a taxa de aproveitamento como um fator entre 0 e 1.
-
-lines = len(data)
-
-response = requests.get("http://localhost:9200/wiki/_count",
+        logger.debug(response)
+        # Agora iremos medir a taxa de aproveitamento como um fator entre 0 e 1.
+        lines = len(data)
+        status = requests.get("http://localhost:9200/wiki/_count",
                       headers={
                           "Content-Type": "application/json"
                       },
                      )
-
-count = response.json()["count"]
-
-status = count / lines
-
-print(status)
+        count = status.json()["count"]
+        progress = count / lines
+        progress = "{0:.0%}".format(progress)
+        logger.debug('Progresso: {0}'.format(progress))
+        dump = ''
+        sleep(LATENCY)
